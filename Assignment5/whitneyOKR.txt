@@ -1,4 +1,4 @@
 Schedule and deliverable:
         NPC Models -- Tuesday by 10pm (estimate 3 hrs)
-        NPC Draft Dialogues -- Tuesday by 10pm (estimate 2 hrs)
-        NPC Draft Scripts -- Tuesday by 10pm (estimate 2 hrs)
+        NPC Draft Creative Dialogue -- Tuesday by 10pm (estimate 2 hrs)
+        NPC Draft Scripts (Interactions, dialogue switch) -- Tuesday by 10pm (estimate 2 hrs)
