@@ -1,0 +1,4 @@
+Scheduel and Deliverable:
+  Creation of the player model:textures and model - Friday by 8 pm (Estimate: 3 hours)
+  Creation of the player controls:basic movement code - Monday by 10 pm (Estimate: 4 hours) 
+  Creation of the player interaction: interact with NPC's and objects code - Wednesday by 9 pm (Estimate: 6 hours)
