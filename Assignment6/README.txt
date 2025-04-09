@@ -1,5 +1,5 @@
 Assignment 6
-Three Example of Physics:
+Three Examples of Physics:
     1. Grabbable boxes for makeshift staircases.
     2. Longer grabbable objects for players to grab and cross death pits.
     3. Invisible barriers and colliders.
