@@ -12,6 +12,7 @@ public class PlayerMovement: MonoBehaviour
     public float gravity = 9.81f;
     public float groundedGravity = 0.05f;
     public float jumpBufferTime = 0.2f;
+    public float CurrentSpeed { get; private set; }
 
     [Header("Sprint Settings")]
     public float sprintSpeed = 10.0f;
@@ -128,6 +129,9 @@ public class PlayerMovement: MonoBehaviour
         // If sprinting, increase speed
         float currentSpeed = isSprinting ? sprintSpeed : walkSpeed;
         controller.Move(moveDirection * currentSpeed * Time.deltaTime);
+
+        // Set speed for animation
+        CurrentSpeed = moveDirection.magnitude * currentSpeed;
 
         // Handle jumping with buffer time
         bool jumpBufferActive = (Time.time - lastJumpPress) <= jumpBufferTime;

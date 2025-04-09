@@ -6,6 +6,7 @@ public class NPCDialogue : MonoBehaviour
     public float interactionDistance = 3f;
     public GameObject dialogueUI;
     public TextMeshProUGUI dialogueText;
+    public GameObject barrierToDisable;
 
     private string[] dialogueLines = {
         "Hello there!",
@@ -67,5 +68,9 @@ public class NPCDialogue : MonoBehaviour
         isTalking = false;
         dialogueUI.SetActive(false);
         patrol.Resume();
+
+
+        if (barrierToDisable != null)
+            barrierToDisable.SetActive(false); // disable the barrier
     }
 }
