@@ -2927,7 +2927,11 @@ MonoBehaviour:
   interactionDistance: 3
   dialogueUI: {fileID: 1617214020}
   dialogueText: {fileID: 740700040}
+  dialogueLines:
+  - HI
+  - HI
   barrierToDisable: {fileID: 342885717}
+  itemToGive: 
 --- !u!114 &564268248
 MonoBehaviour:
   m_ObjectHideFlags: 0
