@@ -3,17 +3,22 @@ using TMPro;
 
 public class NPCDialogue : MonoBehaviour
 {
+    [Header("Interaction Settings")]
     public float interactionDistance = 3f;
+
+    [Header("UI Elements")]
     public GameObject dialogueUI;
     public TextMeshProUGUI dialogueText;
+
+    [Header("Dialogue Settings")]
+    [TextArea(2, 5)]
+    public string[] dialogueLines;  // Now editable from the Inspector!
+
+    [Header("Optional Barrier")]
     public GameObject barrierToDisable;
 
-    private string[] dialogueLines = {
-        "Hello there!",
-        "You look like you're new around here.",
-        "Pass the obstacle... hehehe",
-        "OooOOOooOO!"
-    };
+    [Header("Optional Item Reward")]
+    public string itemToGive;
 
     private int currentLine = 0;
     private bool isTalking = false;
@@ -30,7 +35,6 @@ public class NPCDialogue : MonoBehaviour
     void Update()
     {
         float dist = Vector3.Distance(player.position, transform.position);
-        
 
         if (dist < interactionDistance && Input.GetKeyDown(KeyCode.E))
         {
@@ -43,8 +47,10 @@ public class NPCDialogue : MonoBehaviour
 
     void StartDialogue()
     {
+        if (dialogueLines.Length == 0) return;
+
         isTalking = true;
-        patrol.Pause();
+        patrol?.Pause();
         dialogueUI.SetActive(true);
         currentLine = 0;
         dialogueText.text = dialogueLines[currentLine];
@@ -67,10 +73,17 @@ public class NPCDialogue : MonoBehaviour
     {
         isTalking = false;
         dialogueUI.SetActive(false);
-        patrol.Resume();
-
+        patrol?.Resume();
 
         if (barrierToDisable != null)
-            barrierToDisable.SetActive(false); // disable the barrier
+            barrierToDisable.SetActive(false);
+
+        if (!string.IsNullOrEmpty(itemToGive))
+        {
+            PlayerInventory inv = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerInventory>();
+            if (inv != null)
+                inv.AddItem(itemToGive);
+        }
     }
+
 }
