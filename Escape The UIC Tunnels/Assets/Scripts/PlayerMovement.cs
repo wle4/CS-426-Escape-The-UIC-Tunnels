@@ -29,7 +29,11 @@ public class PlayerMovement: MonoBehaviour
 
     [Header("Rotation Settings")]
     public float rotationSensitivity = 5f;
-    
+
+    [Header("Player Sound Settings")]
+    private AudioSource footstepAudio;
+    private float footstepTimer = 0f;
+    private float footstepInterval = 0.4f; // 0.25f for sprinting
 
     private Rigidbody grabbedObject = null;
     private Transform holdPoint;
@@ -49,7 +53,8 @@ public class PlayerMovement: MonoBehaviour
     private void Start()
     {
         controller = GetComponent<CharacterController>();
-        playerCollider = GetComponent<CapsuleCollider>(); // ← Make sure this is on the player GameObject
+        playerCollider = GetComponent<CapsuleCollider>();
+        footstepAudio = GetComponent<AudioSource>();
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -156,6 +161,25 @@ public class PlayerMovement: MonoBehaviour
 
         // Apply vertical movement
         controller.Move(playerVelocity * Time.deltaTime);
+
+        // Handle player footsteps
+        Vector3 input = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+        bool isMoving = input.magnitude > 0.1f && controller.isGrounded;
+
+        if (isMoving)
+        {
+            footstepTimer -= Time.deltaTime;
+
+            if (footstepTimer <= 0f)
+            {
+                footstepAudio.PlayOneShot(footstepAudio.clip, 1.0f); // Adjust volume as needed
+                footstepTimer = isSprinting ? 8f : 12f;
+            }
+        }
+        else
+        {
+            footstepTimer = 0f; // reset when not moving
+        }
     }
 
     // Keep rotation consistent even during collisions
