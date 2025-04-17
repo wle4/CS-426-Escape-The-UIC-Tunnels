@@ -84,6 +84,7 @@ public class NPCDialogue : MonoBehaviour
             if (inv != null)
                 inv.AddItem(itemToGive);
         }
+        Debug.Log("EndDialogue triggered. itemToGive = " + itemToGive);
     }
 
 }
