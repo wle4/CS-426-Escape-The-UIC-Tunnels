@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using System.Collections;
 
 public class JumpScareDoor1 : MonoBehaviour
@@ -7,8 +8,11 @@ public class JumpScareDoor1 : MonoBehaviour
     public GameObject jumpscareImageObject;
     public AudioSource screamAudio;
     public float fadeDuration = 2f;
-    public float holdTime = 2f; // Time to hold E
+    public float holdTime = 2f;
     public float interactDistance = 3f;
+
+    public TextMeshProUGUI promptText;    // "Press E to enter"
+    public TextMeshProUGUI popupMessage;  // "You need a key"
 
     private bool triggered = false;
     private float holdTimer = 0f;
@@ -17,6 +21,9 @@ public class JumpScareDoor1 : MonoBehaviour
     void Start()
     {
         player = GameObject.FindGameObjectWithTag("Player").transform;
+
+        if (promptText != null) promptText.enabled = false;
+        if (popupMessage != null) popupMessage.enabled = false; // ✅ ADD THIS
     }
 
     void Update()
@@ -24,12 +31,16 @@ public class JumpScareDoor1 : MonoBehaviour
         if (triggered || player == null) return;
 
         float dist = Vector3.Distance(player.position, transform.position);
+
         if (dist <= interactDistance)
         {
+            if (promptText != null)
+                promptText.text = "Hold E to enter";
+            promptText.enabled = true;
+
             if (Input.GetKey(KeyCode.E))
             {
                 holdTimer += Time.deltaTime;
-
                 if (holdTimer >= holdTime)
                 {
                     TryTriggerJumpscare();
@@ -41,6 +52,11 @@ public class JumpScareDoor1 : MonoBehaviour
                 holdTimer = 0f;
             }
         }
+        else
+        {
+            if (promptText != null) promptText.enabled = false;
+            holdTimer = 0f;
+        }
     }
 
     void TryTriggerJumpscare()
@@ -49,10 +65,17 @@ public class JumpScareDoor1 : MonoBehaviour
         if (inv != null && inv.HasItem("Key"))
         {
             triggered = true;
+            inv.UseItem("Key");
             jumpscareImageObject.SetActive(true);
             screamAudio?.Play();
-            inv.UseItem("Key");
-
+            StartCoroutine(FadeOutImage(jumpscareImageObject.GetComponent<RawImage>()));
+        }
+        else
+        {
+            // Show "I need a key..." popup
+            StartCoroutine(ShowPopup("I need a key..."));
+            jumpscareImageObject.SetActive(true);
+            screamAudio?.Play();
             StartCoroutine(FadeOutImage(jumpscareImageObject.GetComponent<RawImage>()));
         }
     }
@@ -73,5 +96,13 @@ public class JumpScareDoor1 : MonoBehaviour
 
         image.color = new Color(color.r, color.g, color.b, 0);
         jumpscareImageObject.SetActive(false);
+    }
+
+    IEnumerator ShowPopup(string message)
+    {
+        popupMessage.text = message;
+        popupMessage.enabled = true;
+        yield return new WaitForSeconds(2f);
+        popupMessage.enabled = false;
     }
 }
