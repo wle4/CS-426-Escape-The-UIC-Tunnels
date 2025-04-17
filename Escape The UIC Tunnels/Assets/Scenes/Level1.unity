@@ -5035,7 +5035,7 @@ GameObject:
   - component: {fileID: 981479793}
   m_Layer: 0
   m_Name: GrabbableObjects
-  m_TagString: Untagged
+  m_TagString: GrabbableObject
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

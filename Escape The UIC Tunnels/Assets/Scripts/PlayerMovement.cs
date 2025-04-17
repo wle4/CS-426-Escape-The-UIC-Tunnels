@@ -19,11 +19,11 @@ public class PlayerMovement: MonoBehaviour
     private bool isSprinting => Input.GetKey(KeyCode.LeftShift);
 
     [Header("Grab Settings")]
-    public float grabRange = 10f;
+    public float grabRange = 3f;
     public float holdDistance = 6f;
     public float grabSmoothness = 10f;
     public float minHoldDistance = 2f;
-    public float maxHoldDistance = 10f;
+    public float maxHoldDistance = 5f;
     public float scrollSensitivity = 3f;
     public KeyCode grabKey = KeyCode.E;
 
@@ -250,7 +250,7 @@ public class PlayerMovement: MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit, grabRange))
         {
             Rigidbody rb = hit.collider.attachedRigidbody;
-            if (rb != null && !rb.isKinematic && rb.CompareTag("Grabbable"))
+            if (rb != null && !rb.isKinematic && rb.CompareTag("GrabbableObject"))
             {
                 grabbedObject = rb;
                 grabbedObject.useGravity = false;
@@ -292,7 +292,7 @@ public class PlayerMovement: MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit, grabRange))
         {
             Rigidbody rb = hit.collider.attachedRigidbody;
-            if (rb != null && !rb.isKinematic && rb.CompareTag("Grabbable"))
+            if (rb != null && !rb.isKinematic && rb.CompareTag("GrabbableObject"))
             {
                 if (hud != null)
                     hud.ShowInteraction("Grab [E]");
