@@ -35,6 +35,9 @@ public class PlayerMovement: MonoBehaviour
     private float footstepTimer = 0f;
     private float footstepInterval = 0.4f; // 0.25f for sprinting
 
+    [Header("Managers")]
+    private HUDController hud;
+
     private Rigidbody grabbedObject = null;
     private Transform holdPoint;
 
@@ -65,6 +68,7 @@ public class PlayerMovement: MonoBehaviour
         holdPoint.SetParent(playerCamera.transform);
         holdPoint.localPosition = new Vector3(0, 0, holdDistance);
 
+        hud = Object.FindFirstObjectByType<HUDController>();
     }
 
     private void Update()
@@ -90,6 +94,9 @@ public class PlayerMovement: MonoBehaviour
 
         // Handle grabbing objects
         HandleGrab();
+
+        if (grabbedObject == null)
+            CheckForGrabbable();
     }
 
     private void HandleRotation()
@@ -243,7 +250,7 @@ public class PlayerMovement: MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit, grabRange))
         {
             Rigidbody rb = hit.collider.attachedRigidbody;
-            if (rb != null && !rb.isKinematic)
+            if (rb != null && !rb.isKinematic && rb.CompareTag("Grabbable"))
             {
                 grabbedObject = rb;
                 grabbedObject.useGravity = false;
@@ -253,6 +260,9 @@ public class PlayerMovement: MonoBehaviour
                 // Prevent physics from pushing player
                 if (playerCollider != null)
                     Physics.IgnoreCollision(grabbedObject.GetComponent<Collider>(), playerCollider, true);
+
+                if (hud != null)
+                    hud.ShowInteraction("Drop [E]");
             }
         }
     }
@@ -271,8 +281,26 @@ public class PlayerMovement: MonoBehaviour
                 Physics.IgnoreCollision(grabbedObject.GetComponent<Collider>(), playerCollider, false);
 
             grabbedObject = null;
+
+            if (hud != null)
+                hud.HideInteraction();
         }
     }
+    private void CheckForGrabbable()
+    {
+        Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+        if (Physics.Raycast(ray, out RaycastHit hit, grabRange))
+        {
+            Rigidbody rb = hit.collider.attachedRigidbody;
+            if (rb != null && !rb.isKinematic && rb.CompareTag("Grabbable"))
+            {
+                if (hud != null)
+                    hud.ShowInteraction("Grab [E]");
+                return;
+            }
+        }
 
-
+        if (hud != null)
+            hud.HideInteraction();
+    }
 }
