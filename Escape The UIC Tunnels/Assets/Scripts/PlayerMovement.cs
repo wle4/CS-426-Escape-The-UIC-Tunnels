@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class PlayerMovement: MonoBehaviour
+public class PlayerMovement : MonoBehaviour
 {
     [Header("Camera Settings")]
     public Camera playerCamera;
@@ -19,35 +19,38 @@ public class PlayerMovement: MonoBehaviour
     private bool isSprinting => Input.GetKey(KeyCode.LeftShift);
 
     [Header("Grab Settings")]
-    public float grabRange = 3f;
+    public float interactRange = 3f;
     public float holdDistance = 6f;
     public float grabSmoothness = 10f;
     public float minHoldDistance = 2f;
     public float maxHoldDistance = 5f;
     public float scrollSensitivity = 3f;
-    public KeyCode grabKey = KeyCode.E;
+    public KeyCode interactKey = KeyCode.E;
 
     [Header("Rotation Settings")]
     public float rotationSensitivity = 5f;
 
     [Header("Player Sound Settings")]
     private AudioSource footstepAudio;
+    public AudioClip throwObjectSound;
     private float footstepTimer = 0f;
-    private float footstepInterval = 0.4f; // 0.25f for sprinting
 
     [Header("Managers")]
     private HUDController hud;
 
-    private Rigidbody grabbedObject = null;
-    private Transform holdPoint;
+    [Header("Footstep Settings")]
+    public float walkStepInterval = 0.3f;
+    public float sprintStepInterval = 0.2f;
 
-    // Private variables
+    private Transform holdPoint;
+    private IInteractable currentInteractable = null;
+    private Rigidbody grabbedObject = null;
+
     private CharacterController controller;
     private Vector3 playerVelocity;
     private bool groundedPlayer;
     private float lastJumpPress = -1f;
 
-    // Prevent rotation jitter
     private float targetPitch = 0.0f;
     private float targetYaw = 0.0f;
 
@@ -81,52 +84,37 @@ public class PlayerMovement: MonoBehaviour
         }
         else
         {
-            // Sync camera rotation to prevent jump when releasing RMB
             targetYaw = transform.eulerAngles.y;
             targetPitch = playerCamera.transform.localEulerAngles.x;
-
-            // Handle 360 wraparound
             if (targetPitch > 180f) targetPitch -= 360f;
         }
 
-        // Handle movement second
         HandleMovement();
-
-        // Handle grabbing objects
-        HandleGrab();
-
-        if (grabbedObject == null)
-            CheckForGrabbable();
+        HandleInteraction();
     }
 
     private void HandleRotation()
     {
-        // Get mouse input
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
 
-        // Update target rotation values
         targetYaw += mouseX;
         targetPitch -= mouseY;
         targetPitch = Mathf.Clamp(targetPitch, -89.0f, 89.0f);
 
-        // Apply clean rotations directly
         transform.rotation = Quaternion.Euler(0.0f, targetYaw, 0.0f);
         playerCamera.transform.localRotation = Quaternion.Euler(targetPitch, 0.0f, 0.0f);
     }
 
     private void HandleMovement()
     {
-        // Check for grounded status with a more reliable approach
         groundedPlayer = controller.isGrounded;
 
-        // Update jump buffer timing
         if (Input.GetButtonDown("Jump"))
         {
             lastJumpPress = Time.time;
         }
 
-        // Handle horizontal movement
         float horizontalInput = Input.GetAxis("Horizontal");
         float verticalInput = Input.GetAxis("Vertical");
 
@@ -138,67 +126,64 @@ public class PlayerMovement: MonoBehaviour
             moveDirection.Normalize();
         }
 
-        // If sprinting, increase speed
         float currentSpeed = isSprinting ? sprintSpeed : walkSpeed;
         controller.Move(moveDirection * currentSpeed * Time.deltaTime);
 
-        // Set speed for animation
         CurrentSpeed = moveDirection.magnitude * currentSpeed;
 
-        // Handle jumping with buffer time
         bool jumpBufferActive = (Time.time - lastJumpPress) <= jumpBufferTime;
 
         if (groundedPlayer)
         {
-            // Apply consistent small gravity when grounded
             playerVelocity.y = -groundedGravity;
-
-            // Process jump if within buffer time
             if (jumpBufferActive)
             {
                 playerVelocity.y = Mathf.Sqrt(jumpHeight * 2.0f * gravity);
-                lastJumpPress = -1f; // Reset jump buffer after successful jump
+                lastJumpPress = -1f;
             }
         }
         else
         {
-            // Apply normal gravity when in air
             playerVelocity.y -= gravity * Time.deltaTime;
         }
 
-        // Apply vertical movement
         controller.Move(playerVelocity * Time.deltaTime);
 
-        // Handle player footsteps
         Vector3 input = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-        bool isMoving = input.magnitude > 0.1f && controller.isGrounded;
+        bool isMoving = input.magnitude > 0.1f;
 
-        if (isMoving)
-        {
-            footstepTimer -= Time.deltaTime;
-
-            if (footstepTimer <= 0f)
-            {
-                footstepAudio.PlayOneShot(footstepAudio.clip, 1.0f); // Adjust volume as needed
-                footstepTimer = isSprinting ? 8f : 12f;
-            }
-        }
-        else
-        {
-            footstepTimer = 0f; // reset when not moving
-        }
+        HandleFootsteps(isMoving);
     }
 
-    // Keep rotation consistent even during collisions
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
-        // Force the correct rotation after collision
         transform.rotation = Quaternion.Euler(0.0f, targetYaw, 0.0f);
     }
 
-    private void HandleGrab()
+    private void HandleFootsteps(bool isMoving)
     {
-        // Scroll wheel to move grabbed object closer/farther
+        //|| !controller.isGrounded
+        if (!isMoving  || footstepAudio == null)
+        {
+            footstepTimer = 0f;
+            return;
+        }
+
+        footstepTimer += Time.deltaTime;
+
+        float interval = isSprinting ? sprintStepInterval : walkStepInterval;
+
+        if (footstepTimer >= interval)
+        {
+            footstepAudio.pitch = Random.Range(0.95f, 1.05f);
+            footstepAudio.PlayOneShot(footstepAudio.clip, 1.0f);
+
+            footstepTimer = 0f; // Reset the step timer
+        }
+    }
+
+    private void HandleInteraction()
+    {
         if (grabbedObject != null)
         {
             float scroll = Input.GetAxis("Mouse ScrollWheel");
@@ -208,65 +193,43 @@ public class PlayerMovement: MonoBehaviour
                 holdDistance = Mathf.Clamp(holdDistance, minHoldDistance, maxHoldDistance);
                 holdPoint.localPosition = new Vector3(0, 0, holdDistance);
             }
-        }
 
-        if (Input.GetKeyDown(grabKey))
-        {
-            if (grabbedObject == null)
-            {
-                TryGrabObject();
-            }
-            else
+            Vector3 desiredPosition = holdPoint.position;
+            Vector3 currentPosition = grabbedObject.position;
+            Vector3 moveDirection = (desiredPosition - currentPosition);
+            grabbedObject.linearVelocity = moveDirection * grabSmoothness;
+
+            if (Input.GetKeyDown(interactKey))
             {
                 ReleaseObject();
             }
         }
-
-        // Move the object smoothly if grabbed
-        if (grabbedObject != null)
+        else
         {
-            Vector3 desiredPosition = holdPoint.position;
-            Vector3 currentPosition = grabbedObject.position;
-            Vector3 moveDirection = (desiredPosition - currentPosition);
-
-            grabbedObject.linearVelocity = moveDirection * grabSmoothness;
-        }
-
-        // Rotate object if right mouse is held
-        if (Input.GetMouseButton(1)) // Right mouse button
-        {
-
-            float rotateX = Input.GetAxis("Mouse X") * rotationSensitivity;
-            float rotateY = -Input.GetAxis("Mouse Y") * rotationSensitivity;
-
-            grabbedObject.transform.Rotate(playerCamera.transform.up, rotateX, Space.World);        // horizontal rotation
-            grabbedObject.transform.Rotate(playerCamera.transform.right, rotateY, Space.World);     // vertical rotation
-        }
-    }
-
-    private void TryGrabObject()
-    {
-        Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
-        if (Physics.Raycast(ray, out RaycastHit hit, grabRange))
-        {
-            Rigidbody rb = hit.collider.attachedRigidbody;
-            if (rb != null && !rb.isKinematic && rb.CompareTag("GrabbableObject"))
+            Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+            if (Physics.Raycast(ray, out RaycastHit hit, interactRange))
             {
-                grabbedObject = rb;
-                grabbedObject.useGravity = false;
-                grabbedObject.freezeRotation = true;
-                grabbedObject.linearDamping = 10f;
-
-                // Prevent physics from pushing player
-                if (playerCollider != null)
-                    Physics.IgnoreCollision(grabbedObject.GetComponent<Collider>(), playerCollider, true);
-
-                if (hud != null)
-                    hud.ShowInteraction("Drop [E]");
+                IInteractable interactable = hit.collider.GetComponent<IInteractable>();
+                if (interactable != null)
+                {
+                    hud?.ShowInteraction(interactable.GetPrompt());
+                    if (Input.GetKeyDown(interactKey))
+                    {
+                        interactable.OnInteract();
+                        return;
+                    }
+                }
+                else
+                {
+                    hud?.HideInteraction();
+                }
+            }
+            else
+            {
+                hud?.HideInteraction();
             }
         }
     }
-
 
     private void ReleaseObject()
     {
@@ -276,31 +239,53 @@ public class PlayerMovement: MonoBehaviour
             grabbedObject.freezeRotation = false;
             grabbedObject.linearDamping = 0f;
 
-            // Re-enable collision
             if (playerCollider != null)
                 Physics.IgnoreCollision(grabbedObject.GetComponent<Collider>(), playerCollider, false);
 
             grabbedObject = null;
+            hud?.HideInteraction();
 
-            if (hud != null)
-                hud.HideInteraction();
+            AudioSource audio = this.GetComponent<AudioSource>();
+            audio.pitch = Random.Range(0.95f, 1.05f);
+            audio.PlayOneShot(throwObjectSound, 0.5f);
         }
     }
-    private void CheckForGrabbable()
-    {
-        Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
-        if (Physics.Raycast(ray, out RaycastHit hit, grabRange))
-        {
-            Rigidbody rb = hit.collider.attachedRigidbody;
-            if (rb != null && !rb.isKinematic && rb.CompareTag("GrabbableObject"))
-            {
-                if (hud != null)
-                    hud.ShowInteraction("Grab [E]");
-                return;
-            }
-        }
 
-        if (hud != null)
-            hud.HideInteraction();
+    public void GrabObject(Rigidbody rb)
+    {
+        if (rb == null || rb.isKinematic) return;
+
+        string tag = rb.gameObject.tag;
+
+        if (tag == "GrabbableObject")
+        {
+            // Regular grabbable item (physics-based)
+            grabbedObject = rb;
+            grabbedObject.useGravity = false;
+            grabbedObject.freezeRotation = true;
+            grabbedObject.linearDamping = 10f;
+
+            if (playerCollider != null)
+                Physics.IgnoreCollision(grabbedObject.GetComponent<Collider>(), playerCollider, true);
+
+            hud?.ShowInteraction("Drop [E]");
+        }
+        else if (tag == "InventoryItem")
+        {
+            // Inventory item — no physics hold, just add to inventory
+            AddToInventory(rb.gameObject);
+            hud?.ShowInteraction("Picked up!");
+            Destroy(rb.gameObject); // optionally remove the item from scene
+        }
+        else
+        {
+            Debug.LogWarning($"Unhandled grabbable tag: {tag}");
+        }
+    }
+
+    private void AddToInventory(GameObject item)
+    {
+        Debug.Log($"Added {item.name} to inventory.");
+        // TODO: push to inventory system
     }
 }
