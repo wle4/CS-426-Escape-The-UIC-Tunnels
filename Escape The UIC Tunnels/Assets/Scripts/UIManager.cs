@@ -33,6 +33,7 @@ public class UIManager : MonoBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
+    // SCENE HANDLING
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         UpdateUIForScene(scene.name);
@@ -126,10 +127,16 @@ public class UIManager : MonoBehaviour
         cg.blocksRaycasts = false;
         fadePanel.SetActive(false);
     }
-
     public void QuitGame()
     {
         Debug.Log("Quitting game...");
         Application.Quit();
     }
+    // END OF SCENE HANDLING
+
+    public HUDController GetHUDController()
+    {
+        return hudUI.GetComponent<HUDController>();
+    }
+
 }
