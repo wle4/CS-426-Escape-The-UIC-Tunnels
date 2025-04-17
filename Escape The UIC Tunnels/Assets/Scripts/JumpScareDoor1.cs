@@ -26,45 +26,55 @@ public class JumpScareDoor1 : MonoBehaviour
         if (popupMessage != null) popupMessage.enabled = false; // ✅ ADD THIS
     }
 
-    void Update()
+    private bool hasUsedDoor = false; // 🆕
+
+void Update()
+{
+    if (triggered || player == null) return;
+
+    float dist = Vector3.Distance(player.position, transform.position);
+
+    if (dist <= interactDistance && !hasUsedDoor)
     {
-        if (triggered || player == null) return;
-
-        float dist = Vector3.Distance(player.position, transform.position);
-
-        if (dist <= interactDistance)
+        if (promptText != null)
         {
-            if (promptText != null)
-                promptText.text = "Hold E to enter";
+            promptText.text = "Hold E to enter";
             promptText.enabled = true;
+        }
 
-            if (Input.GetKey(KeyCode.E))
+        if (Input.GetKey(KeyCode.E))
+        {
+            holdTimer += Time.deltaTime;
+            if (holdTimer >= holdTime)
             {
-                holdTimer += Time.deltaTime;
-                if (holdTimer >= holdTime)
-                {
-                    TryTriggerJumpscare();
-                    holdTimer = 0f;
-                }
-            }
-            else
-            {
+                TryTriggerJumpscare();
                 holdTimer = 0f;
             }
         }
         else
         {
-            if (promptText != null) promptText.enabled = false;
             holdTimer = 0f;
         }
     }
+    else
+    {
+        if (promptText != null) promptText.enabled = false;
+        holdTimer = 0f;
+    }
+}
+
 
     void TryTriggerJumpscare()
     {
+        if (promptText != null)
+            promptText.enabled = false;
+
         var inv = player.GetComponent<PlayerInventory>();
         if (inv != null && inv.HasItem("Key"))
         {
             triggered = true;
+            hasUsedDoor = true; // ✅ ONLY mark it used if they had the key!
+
             inv.UseItem("Key");
             jumpscareImageObject.SetActive(true);
             screamAudio?.Play();
@@ -72,13 +82,13 @@ public class JumpScareDoor1 : MonoBehaviour
         }
         else
         {
-            // Show "I need a key..." popup
+            // ❌ Do NOT mark as used!
             StartCoroutine(ShowPopup("I need a key..."));
-            jumpscareImageObject.SetActive(true);
-            screamAudio?.Play();
-            StartCoroutine(FadeOutImage(jumpscareImageObject.GetComponent<RawImage>()));
         }
     }
+
+
+
 
     IEnumerator FadeOutImage(RawImage image)
     {
