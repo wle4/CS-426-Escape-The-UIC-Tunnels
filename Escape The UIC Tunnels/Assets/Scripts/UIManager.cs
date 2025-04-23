@@ -11,6 +11,7 @@ public class UIManager : MonoBehaviour
     public GameObject mainMenuUI;
     public GameObject hudUI;
     public GameObject pauseMenuUI;
+    public GameObject creditsMenuUI;
 
     private void Awake()
     {
@@ -50,6 +51,10 @@ public class UIManager : MonoBehaviour
         {
             ShowOnly(hudUI);
         }
+        else if (sceneName == "Credits")
+        {
+            ShowOnly(creditsMenuUI);
+        }
         else
         {
             ShowOnly(null); // show nothing
@@ -58,7 +63,7 @@ public class UIManager : MonoBehaviour
 
     public void ShowOnly(GameObject panelToShow)
     {
-        GameObject[] panels = { mainMenuUI, hudUI, pauseMenuUI };
+        GameObject[] panels = { mainMenuUI, hudUI, pauseMenuUI, creditsMenuUI };
         foreach (GameObject panel in panels)
         {
             if (panel != null)
