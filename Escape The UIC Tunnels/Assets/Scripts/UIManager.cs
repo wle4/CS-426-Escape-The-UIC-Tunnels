@@ -109,7 +109,7 @@ public class UIManager : MonoBehaviour
     }
 
 
-    private IEnumerator FadeFromBlack()
+    public IEnumerator FadeFromBlack()
     {
         if (fadePanel == null) yield break;
 
