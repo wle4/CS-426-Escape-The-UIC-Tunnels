@@ -25,10 +25,10 @@ public class JumpScareDoor1 : MonoBehaviour
         player = GameObject.FindGameObjectWithTag("Player").transform;
 
         if (promptText != null) promptText.enabled = false;
-        if (popupMessage != null) popupMessage.enabled = false; // ✅ ADD THIS
+        if (popupMessage != null) popupMessage.enabled = false;
     }
 
-    private bool hasUsedDoor = false; // 🆕
+    private bool hasUsedDoor = false;
 
 void Update()
 {
@@ -46,12 +46,12 @@ void Update()
 
         if (Input.GetKey(KeyCode.E))
         {
-            holdTimer += Time.deltaTime;
-            if (holdTimer >= holdTime)
-            {
+            //holdTimer += Time.deltaTime;
+            //if (holdTimer >= holdTime)
+            //{
                 TryTriggerJumpscare();
                 holdTimer = 0f;
-            }
+            //}
         }
         else
         {
@@ -71,7 +71,7 @@ void Update()
         if (promptText != null)
             promptText.enabled = false;
 
-        hasTriedLeftDoor = true;  // ✅ Set this no matter what
+        hasTriedLeftDoor = true;
 
         var inv = player.GetComponent<PlayerInventory>();
         if (inv != null && inv.HasItem("Key"))

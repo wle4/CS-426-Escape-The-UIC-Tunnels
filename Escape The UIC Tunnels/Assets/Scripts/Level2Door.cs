@@ -7,6 +7,8 @@ public class Level2Door : MonoBehaviour
     public float interactDistance = 3f;
     public string nextSceneName = "Level3";  // Set this in Inspector
     public TextMeshProUGUI promptText;
+    private AudioSource audioSource;
+    [SerializeField] private AudioClip doorSound;
 
     private Transform player;
 
@@ -14,6 +16,8 @@ public class Level2Door : MonoBehaviour
     {
         player = GameObject.FindGameObjectWithTag("Player").transform;
         if (promptText != null) promptText.enabled = false;
+        if (audioSource == null)
+            audioSource = gameObject.AddComponent<AudioSource>();
     }
 
     void Update()
@@ -41,6 +45,10 @@ public class Level2Door : MonoBehaviour
                 {
                     if(UIManager.instance != null)
                     {
+                        if (doorSound != null)
+                        {
+                            audioSource.PlayOneShot(doorSound);
+                        }
                         UIManager.instance.LoadSceneWithFade(nextSceneName);
                     }
                     else { 

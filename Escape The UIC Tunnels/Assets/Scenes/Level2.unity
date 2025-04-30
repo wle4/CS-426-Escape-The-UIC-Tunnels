@@ -129,7 +129,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 100004, guid: ab402a8bf9fedf444b0dcfae747a48e6, type: 3}
       propertyPath: m_Name
-      value: PTK_DoubleDoor_Medium (1)
+      value: exitdoor
       objectReference: {fileID: 0}
     - target: {fileID: 100004, guid: ab402a8bf9fedf444b0dcfae747a48e6, type: 3}
       propertyPath: m_TagString
@@ -1198,6 +1198,7 @@ MonoBehaviour:
   interactDistance: 3
   nextSceneName: Level3
   promptText: {fileID: 221774153}
+  doorSound: {fileID: 8300000, guid: 35c885fbde0abb649bb253115594e14f, type: 3}
 --- !u!1 &437083977
 GameObject:
   m_ObjectHideFlags: 0
