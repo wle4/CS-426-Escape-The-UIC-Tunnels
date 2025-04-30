@@ -9,8 +9,12 @@ public class MouseSpawner : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            Instantiate(mousePrefab, spawnPoint.position, spawnPoint.rotation);
-            Destroy(gameObject); // optional: remove the trigger after use
+            // Force the capsule to be upright and face forward (Z+)
+            Quaternion uprightRotation = Quaternion.Euler(-90f, spawnPoint.eulerAngles.y, 0f);
+
+            GameObject mouse = Instantiate(mousePrefab, spawnPoint.position, uprightRotation);
+
+            Destroy(gameObject); // remove the trigger
         }
     }
 }
