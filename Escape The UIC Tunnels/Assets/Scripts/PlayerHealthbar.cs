@@ -14,15 +14,18 @@ public class PlayerHealthbar : MonoBehaviour
     }
 
     public void TakeDamage(int amount)
-    {
-        currentHealth -= amount;
-        Debug.Log("Player Health: " + currentHealth);
-
-        if (currentHealth <= 0)
         {
-            Die();
+            if (hasTriggeredJumpscare) return; // 👈 prevent further damage
+
+            currentHealth -= amount;
+            Debug.Log("Player Health: " + currentHealth);
+
+            if (currentHealth <= 0)
+            {
+                Die();
+            }
         }
-    }
+
 
     void Die()
     {
