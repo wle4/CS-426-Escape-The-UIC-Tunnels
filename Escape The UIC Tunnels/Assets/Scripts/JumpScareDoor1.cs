@@ -17,6 +17,8 @@ public class JumpScareDoor1 : MonoBehaviour
     private bool triggered = false;
     private float holdTimer = 0f;
     private Transform player;
+    public static bool hasTriedLeftDoor = false;  // Shared state other scripts can check
+
 
     void Start()
     {
@@ -69,11 +71,13 @@ void Update()
         if (promptText != null)
             promptText.enabled = false;
 
+        hasTriedLeftDoor = true;  // ✅ Set this no matter what
+
         var inv = player.GetComponent<PlayerInventory>();
         if (inv != null && inv.HasItem("Key"))
         {
             triggered = true;
-            hasUsedDoor = true; // ✅ ONLY mark it used if they had the key!
+            hasUsedDoor = true;
 
             inv.UseItem("Key");
             jumpscareImageObject.SetActive(true);
@@ -82,10 +86,10 @@ void Update()
         }
         else
         {
-            // ❌ Do NOT mark as used!
             StartCoroutine(ShowPopup("I need a key..."));
         }
     }
+
 
 
 
